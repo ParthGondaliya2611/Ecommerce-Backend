@@ -12,7 +12,7 @@ import categoryRoute from "./Routes/categoryRoute.js"
 import cartRoute from "./Routes/cartRoute.js"
 import AddressRoute from "./Routes/AddressRoute.js"
 import OrderRoute from "./Routes/OrderRoute.js"
-connectDB()
+connectDB();
 
 app.use(express.json());
 app.use(cors());

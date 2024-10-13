@@ -134,7 +134,6 @@ export const updateUserController = async (req, res) => {
 // single user data
 export const SingleUserData = async (req, res) => {
   try {
-    // console.log(req.user.id);
     const user = await User.findById(req.user.id);
     if (!user) {
       return res.status(404).json({ success: false, msg: "User not found" });

@@ -24,7 +24,7 @@ export const requiresign = async (req, res, next) => {
 export const isAdmin = async (req, res, next) => {
   try {
     const user = await userModel.findById(req.user.id);
-     if (user.role == "user") {
+     if (user.role === "user") {
       return res
         .status(403)
         .json({ success: false, message: "Access denied. Admins only" });
@@ -35,4 +35,5 @@ export const isAdmin = async (req, res, next) => {
     console.log(error);
     res.status(500).json({ success: false, message: "Server error" });
   }
+
 };

@@ -175,24 +175,6 @@ export const ForgotPassword = async (req, res) => {
   }
 };
 
-//test user token
-export const testController = (req, res) => {
-  res.json("Protected user");
-};
-
-//find the user
-export const usersController = async (req, res) => {
-  try {
-    // Fetch users excluding those with role 0
-    const users = await User.find({ role: { $ne:  1} });
-    res.json({ success: true, users });
-  } catch (error) {
-    console.log(error);
-    res
-      .status(500)
-      .json({ success: false, msg: "Error while getting the users", error });
-  }
-};
 
 // Update a user's role
 export const updateUserRole = async (req, res) => {

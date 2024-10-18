@@ -176,7 +176,7 @@ export const ForgotPassword = async (req, res) => {
     });
 
     // Construct email message
-    const resetLink = `https://swiftpick.vercel.app/resetpassword/${resetToken}`;
+    const resetLink = `swiftpick.vercel.app/resetpassword/${resetToken}`;
     const mailOptions = {
       to: user.email,
       from: "ppatel9486@gmail.com",

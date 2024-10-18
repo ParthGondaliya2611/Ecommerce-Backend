@@ -21,15 +21,19 @@ const userSchema = mongoose.Schema(
       required: true,
       unique: true,
     },
-    address: {
-      type: String,
-      required: true,
-    },
     answer: {
       type: String,
       required: true,
     },
     role: { type: String, default: "user" },
+    resetPasswordToken: {
+      type: String,
+      default: null,
+    },
+    resetPasswordExpires: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

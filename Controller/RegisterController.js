@@ -1,12 +1,13 @@
 import { hashpassword, comparepassword } from "../helper/authHelper.js";
 import User from "../Model/userModel.js";
-
+import nodemailer from "nodemailer";
+import crypto from "crypto";
 import JWT from "jsonwebtoken";
 
 //register user
 export const RegisterUser = async (req, res) => {
   try {
-    const { name, email, password, phone, address, answer } = req.body;
+    const { name, email, password, phone, answer } = req.body;
 
     // existing user
     const existinguser = await User.findOne({ email });
@@ -22,7 +23,6 @@ export const RegisterUser = async (req, res) => {
       email,
       password: hashedpassword,
       phone,
-      address,
       answer,
     });
     await user.save();
@@ -87,7 +87,6 @@ export const LoginUser = async (req, res) => {
         email: user.email,
         name: user.name,
         phone: user.phone,
-        address: user.address,
         role: user.role,
       },
       token,
@@ -103,7 +102,7 @@ export const LoginUser = async (req, res) => {
 //update user
 export const updateUserController = async (req, res) => {
   try {
-    const { name, email, phone, address } = req.body;
+    const { name, email, role, phone } = req.body;
     const { id } = req.params;
     const user = await User.findById(id);
     if (!user) {
@@ -117,7 +116,7 @@ export const updateUserController = async (req, res) => {
         name: name || user.name,
         email: email || user.email,
         phone: phone || user.phone,
-        address: address || user.address,
+        role: role || user.role,
       },
       { new: true }
     );
@@ -154,51 +153,72 @@ export const SingleUserData = async (req, res) => {
 
 //forgot password
 export const ForgotPassword = async (req, res) => {
+  const { email } = req.body;
+
   try {
-    const { email, answer, password } = req.body;
-    //check if user exists
-    const user = await User.findOne({ email, answer });
-    //validation
+    const user = await User.findOne({ email });
+
     if (!user) {
-      return res.status(404).json({ success: false, msg: "Email not found" });
+      return res.status(404).json({ message: "User not found" });
     }
-    const hashed = await hashpassword(password);
-    await User.findByIdAndUpdate(user._id, { password: hashed });
-    res
-      .status(200)
-      .json({ success: true, msg: "Password updated successfully" });
+
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = Date.now() + 3600000;
+    await user.save();
+
+    const transporter = nodemailer.createTransport({
+      service: "Gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    // Construct email message
+    const resetLink = `https://swiftpick-frontend.vercel.app/resetpassword/${resetToken}`;
+    const mailOptions = {
+      to: user.email,
+      from: "ppatel9486@gmail.com",
+      subject: "Password Reset",
+      text: `You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n
+                 Please click on the following link, or paste this into your browser to complete the process:\n\n
+                 ${resetLink}\n\n
+                 If you did not request this, please ignore this email and your password will remain unchanged.\n`,
+    };
+
+    // Send email
+    await transporter.sendMail(mailOptions);
+
+    res.status(200).json({ message: "Password reset link sent successfully" });
   } catch (error) {
-    console.log(error);
-    res
-      .status(500)
-      .json({ success: false, msg: "Something Went Wrong ", error });
+    console.error(error);
+    res.status(500).json({ message: "Error sending reset email" });
   }
 };
 
-
-// Update a user's role
-export const updateUserRole = async (req, res) => {
-  const { id, role } = req.body;
-
-  if (!id || newRole === undefined) {
-    return res.status(400).json({ success: false, msg: "User ID and new role are required" });
-  }
-
+export const resetpassword = async (req, res) => {
+  const { password } = req.body;
+  const { token } = req.params;
   try {
-    // Update the user's role
-    const updatedUser = await User.findByIdAndUpdate(
-      id,
-      { role: role },
-      { new: true }
-    );
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() }, // Check if token has expired
+    });
 
-    if (!updatedUser) {
-      return res.status(404).json({ success: false, msg: "User not found" });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired token" });
     }
 
-    res.json({ success: true, user: updatedUser });
+    const hashedpassword = await hashpassword(password);
+    user.password = hashedpassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.status(200).json({ message: "Password updated successfully" });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ success: false, msg: "Error while updating user role", error });
+    console.error(error);
+    res.status(500).json({ message: "Error updating password" });
   }
 };

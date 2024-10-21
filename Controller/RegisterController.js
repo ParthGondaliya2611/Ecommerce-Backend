@@ -7,7 +7,7 @@ import JWT from "jsonwebtoken";
 //register user
 export const RegisterUser = async (req, res) => {
   try {
-    const { name, email, password, phone, answer } = req.body;
+    const { name, email, password, phone } = req.body;
 
     // existing user
     const existinguser = await User.findOne({ email });
@@ -22,8 +22,7 @@ export const RegisterUser = async (req, res) => {
       name,
       email,
       password: hashedpassword,
-      phone,
-      answer,
+      phone
     });
     await user.save();
     //generate token

@@ -21,10 +21,6 @@ const userSchema = mongoose.Schema(
       required: true,
       unique: true,
     },
-    answer: {
-      type: String,
-      required: true,
-    },
     role: { type: String, default: "user" },
     resetPasswordToken: {
       type: String,

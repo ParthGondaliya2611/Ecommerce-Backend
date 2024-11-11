@@ -14,11 +14,11 @@ export const requiresign = async (req, res, next) => {
     const decode = await JWT.verify(token, process.env.JWT_SECRET);
     req.user = decode;
     next();
-  } catch (error) {
+  } catch (error) {   
     console.log(error);
     res.status(401).json({ success: false, message: "Invalid token" });
   }
-};
+   };
 
 // Admin Access
 export const isAdmin = async (req, res, next) => {
